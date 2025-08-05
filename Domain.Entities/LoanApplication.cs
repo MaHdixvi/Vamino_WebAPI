@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared.Kernel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,9 +10,8 @@ namespace Domain.Entities
     /// <summary>
     /// درخواست وام توسط کاربر
     /// </summary>
-    public class LoanApplication
+    public class LoanApplication: BaseEntity
     {
-        public string Id { get; set; }
         public string UserId { get; set; }
         public DateTime SubmitDate { get; set; }
         public decimal RequestedAmount { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared.Kernel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,9 +10,8 @@ namespace Domain.Entities
     /// <summary>
     /// وام نهایی پس از تأیید
     /// </summary>
-    public class Loan
+    public class Loan: BaseEntity
     {
-        public string Id { get; set; }
         public string LoanApplicationId { get; set; }
         public decimal Amount { get; set; }
         public DateTime DisbursementDate { get; set; }

@@ -1,12 +1,20 @@
-﻿using System;
+﻿using Core.Application.DTOs;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Core.Application.Services
 {
-    internal interface ILoanApplicationService
+    /// <summary>
+    /// سرویس اصلی برای مدیریت درخواست‌های وام
+    /// </summary>
+    public interface ILoanApplicationService
     {
+        Task<LoanRequestDto> CreateLoanApplicationAsync(LoanRequestDto loanRequest);
+        Task<LoanRequestDto> GetLoanApplicationByIdAsync(string id);
+        Task<IEnumerable<LoanRequestDto>> GetLoanApplicationsByUserIdAsync(string userId);
+        Task<IEnumerable<LoanRequestDto>> GetAllLoanApplicationsAsync();
+        Task UpdateLoanApplicationStatusAsync(string id, string status, string reason = null);
+        Task DeleteLoanApplicationAsync(string id);
     }
 }

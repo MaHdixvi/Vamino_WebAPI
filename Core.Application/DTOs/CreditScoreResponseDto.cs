@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace Core.Application.DTOs
 {
-    internal class CreditScoreResponseDto
+    public class CreditScoreResponseDto
     {
+        public string UserId { get; set; }
+        public int Score { get; set; }
+        public string RiskLevel { get; set; }
+        public DateTime EvaluationDate { get; set; }
+        public string EvaluatedBy { get; set; }
     }
 }

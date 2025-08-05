@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared.Kernel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,9 +10,8 @@ namespace Domain.Entities
     /// <summary>
     /// لاگ تراکنش‌های مالی و عملیاتی سیستم
     /// </summary>
-    public class TransactionLog
+    public class TransactionLog: BaseEntity
     {
-        public string Id { get; set; }
         public DateTime Timestamp { get; set; }
         public string Action { get; set; } // Apply, Approve, Pay, Reject
         public string RelatedEntity { get; set; } // LoanApplication, Loan
