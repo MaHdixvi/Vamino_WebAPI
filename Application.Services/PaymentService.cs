@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.Application.Contracts
+namespace Application.Services
 {
-    internal class ICommandHandler
+    internal class PaymentService
     {
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Core.Application.Contracts
 {
-    internal class IQueryHandler
+    internal interface ILoanRepository
     {
     }
 }

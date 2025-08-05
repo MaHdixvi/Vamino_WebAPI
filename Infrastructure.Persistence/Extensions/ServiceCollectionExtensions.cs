@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.Application.Contracts
+namespace Infrastructure.Persistence.Extensions
 {
-    internal class IAppService
+    internal class ServiceCollectionExtensions
     {
     }
 }

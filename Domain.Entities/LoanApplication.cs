@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class LoanApplication
+    /// <summary>
+    /// درخواست وام توسط کاربر
+    /// </summary>
+    public class LoanApplication
     {
+        public string Id { get; set; }
+        public string UserId { get; set; }
+        public DateTime SubmitDate { get; set; }
+        public decimal RequestedAmount { get; set; }
+        public string Status { get; set; } // Pending, Approved, Rejected
+        public string ReasonForRejection { get; set; }
     }
 }

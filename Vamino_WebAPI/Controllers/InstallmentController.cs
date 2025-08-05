@@ -4,9 +4,7 @@
 
 namespace Vamino_WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class InstallmentController : ControllerBase
+    public class InstallmentController : SiteBaseController
     {
         // GET: api/<InstallmentController>
         [HttpGet]

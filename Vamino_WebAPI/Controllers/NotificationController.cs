@@ -4,35 +4,36 @@
 
 namespace Vamino_WebAPI.Controllers
 {
-    public class LoanController : SiteBaseController
+
+    public class NotificationController : SiteBaseController
     {
-        // GET: api/<LoanController>
+        // GET: api/<NotificationController>
         [HttpGet]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
         }
 
-        // GET api/<LoanController>/5
+        // GET api/<NotificationController>/5
         [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
         }
 
-        // POST api/<LoanController>
+        // POST api/<NotificationController>
         [HttpPost]
         public void Post([FromBody] string value)
         {
         }
 
-        // PUT api/<LoanController>/5
+        // PUT api/<NotificationController>/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {
         }
 
-        // DELETE api/<LoanController>/5
+        // DELETE api/<NotificationController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {

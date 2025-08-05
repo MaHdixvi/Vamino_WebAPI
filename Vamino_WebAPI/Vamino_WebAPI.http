@@ -1,6 +1,0 @@
-@Vamino_WebAPI_HostAddress = http://localhost:5037
-
-GET {{Vamino_WebAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

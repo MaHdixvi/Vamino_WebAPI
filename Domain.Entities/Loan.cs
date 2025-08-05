@@ -6,7 +6,17 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class Loan
+    /// <summary>
+    /// وام نهایی پس از تأیید
+    /// </summary>
+    public class Loan
     {
+        public string Id { get; set; }
+        public string LoanApplicationId { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime DisbursementDate { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Status { get; set; } // Active, Paid, Overdue
+        public string InterestRate { get; set; }
     }
 }

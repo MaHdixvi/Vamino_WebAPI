@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class User
+    /// <summary>
+    /// کاربر عادی سیستم که درخواست وام می‌دهد
+    /// </summary>
+    public class User
     {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string NationalId { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string BankAccountNumber { get; set; }
     }
 }

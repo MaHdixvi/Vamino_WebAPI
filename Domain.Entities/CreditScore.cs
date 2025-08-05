@@ -6,7 +6,17 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class CreditScore
+    /// <summary>
+    /// نمره اعتباری کاربر بر اساس سابقه مالی و رفتار کاربری
+    /// </summary>
+    public class CreditScore
     {
+        public string Id { get; set; }
+        public string UserId { get; set; }
+        public int Score { get; set; } // مثلاً بین 300 تا 850
+        public string RiskLevel { get; set; } // Low, Medium, High
+        public DateTime EvaluationDate { get; set; }
+        public string ReasonForScore { get; set; } // دلیل نمره (مثلاً تأخیر در پرداخت)
+        public string EvaluatedBy { get; set; } // توسط چه کسی ارزیابی شده (AI یا مدیر)
     }
 }

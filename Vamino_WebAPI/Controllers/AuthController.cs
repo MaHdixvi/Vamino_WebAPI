@@ -4,9 +4,7 @@
 
 namespace Vamino_WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : SiteBaseController
     {
         // GET: api/<AuthController>
         [HttpGet]

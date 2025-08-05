@@ -6,7 +6,15 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class TransactionLog
+    /// <summary>
+    /// لاگ تراکنش‌های مالی و عملیاتی سیستم
+    /// </summary>
+    public class TransactionLog
     {
+        public string Id { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string Action { get; set; } // Apply, Approve, Pay, Reject
+        public string RelatedEntity { get; set; } // LoanApplication, Loan
+        public string Details { get; set; }
     }
 }
