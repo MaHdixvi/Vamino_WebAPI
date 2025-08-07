@@ -18,5 +18,6 @@ namespace Domain.Entities
         public DateTime EvaluationDate { get; set; }
         public string ReasonForScore { get; set; } // دلیل نمره (مثلاً تأخیر در پرداخت)
         public string EvaluatedBy { get; set; } // توسط چه کسی ارزیابی شده (AI یا مدیر)
+        public User User { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vamino_WebAPI", "Vamino_WebAPI\Vamino_WebAPI.csproj", "{5FC23706-4726-446F-95A3-5AA232A1FC23}"
 EndProject
@@ -14,8 +14,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Messaging", "Infrastructure.Messaging\Infrastructure.Messaging.csproj", "{1B491AC2-36BD-484E-B701-2CF4EDDDE048}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Security", "Infrastructure.Security\Infrastructure.Security.csproj", "{88C58802-8E13-4CBB-8819-744B7FD704A0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application.Services", "Application.Services\Application.Services.csproj", "{550B0F91-24C8-40D4-B546-926FE4AA3142}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Kernel", "Shared.Kernel\Shared.Kernel.csproj", "{4A62D4FC-E958-4AD0-876C-0F000588EFAE}"
 EndProject
@@ -49,10 +47,6 @@ Global
 		{88C58802-8E13-4CBB-8819-744B7FD704A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88C58802-8E13-4CBB-8819-744B7FD704A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88C58802-8E13-4CBB-8819-744B7FD704A0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{550B0F91-24C8-40D4-B546-926FE4AA3142}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{550B0F91-24C8-40D4-B546-926FE4AA3142}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{550B0F91-24C8-40D4-B546-926FE4AA3142}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{550B0F91-24C8-40D4-B546-926FE4AA3142}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4A62D4FC-E958-4AD0-876C-0F000588EFAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4A62D4FC-E958-4AD0-876C-0F000588EFAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A62D4FC-E958-4AD0-876C-0F000588EFAE}.Release|Any CPU.ActiveCfg = Release|Any CPU

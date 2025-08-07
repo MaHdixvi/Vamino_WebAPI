@@ -1,41 +1,83 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿using Application.Services;
+using Core.Application.DTOs;
+using Core.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Kernel;
 
 namespace Vamino_WebAPI.Controllers
 {
+    /// <summary>
+    /// کنترلر مدیریت اقساط وام
+    /// </summary>
     public class InstallmentController : SiteBaseController
     {
-        // GET: api/<InstallmentController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IInstallmentManagementService _installmentService;
+
+        public InstallmentController(IInstallmentManagementService installmentService)
         {
-            return new string[] { "value1", "value2" };
+            _installmentService = installmentService;
         }
 
-        // GET api/<InstallmentController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        /// <summary>
+        /// تولید جدول اقساط برای یک وام
+        /// </summary>
+        [HttpPost("schedule")]
+        public async Task<ActionResult<Result<InstallmentScheduleDto>>> GenerateSchedule([FromBody] InstallmentScheduleRequestDto request)
         {
-            return "value";
+            try
+            {
+                var installments = await _installmentService.GenerateInstallmentScheduleAsync(
+                    request.LoanId, request.Amount, request.NumberOfInstallments);
+
+                var scheduleDto = new InstallmentScheduleDto
+                {
+                    LoanId = request.LoanId,
+                    TotalAmount = request.Amount,
+                    NumberOfInstallments = request.NumberOfInstallments,
+                    Installments = installments.Select(i => new InstallmentDto
+                    {
+                        Number = i.Number,
+                        DueDate = i.DueDate,
+                        PrincipalAmount = i.PrincipalAmount,
+                        InterestAmount = i.InterestAmount,
+                        TotalAmount = i.TotalAmount,
+                        Status = i.Status
+                    }).ToList()
+                };
+
+                return Ok(Result<InstallmentScheduleDto>.Success(scheduleDto));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result<InstallmentScheduleDto>.Failure(new[] { ex.Message }));
+            }
         }
 
-        // POST api/<InstallmentController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        /// <summary>
+        /// دریافت اقساط یک وام
+        /// </summary>
+        [HttpGet("by-loan/{loanId}")]
+        public async Task<ActionResult<Result<IEnumerable<InstallmentDto>>>> GetByLoanId(string loanId)
         {
-        }
+            try
+            {
+                var installments = await _installmentService.GetInstallmentsByLoanIdAsync(loanId);
+                var dtos = installments.Select(i => new InstallmentDto
+                {
+                    Number = i.Number,
+                    DueDate = i.DueDate,
+                    PrincipalAmount = i.PrincipalAmount,
+                    InterestAmount = i.InterestAmount,
+                    TotalAmount = i.TotalAmount,
+                    Status = i.Status
+                });
 
-        // PUT api/<InstallmentController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<InstallmentController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+                return Ok(Result<IEnumerable<InstallmentDto>>.Success(dtos));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result<IEnumerable<InstallmentDto>>.Failure(new[] { ex.Message }));
+            }
         }
     }
 }

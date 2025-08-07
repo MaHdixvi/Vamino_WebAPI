@@ -20,5 +20,6 @@ namespace Domain.Entities
         public decimal TotalAmount { get; set; } // مجموع
         public string Status { get; set; } // Paid, Pending, Overdue
         public DateTime? PaymentDate { get; set; } // تاریخ پرداخت (در صورت پرداخت)
+        public Loan Loan { get; set; }
     }
 }

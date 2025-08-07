@@ -1,12 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Entities;
+using Infrastructure.Persistence.Configuration;
+using Infrastructure.Persistence.Configuration.EntityConfigurations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Persistence.Data
 {
-    internal class UserRepository
+    /// <summary>
+    /// متن اصلی دیتابیس برای سیستم وامینو
+    /// </summary>
+    public class AppDbContext : DbContext
     {
+        public DbSet<User> Users { get; set; }
+        public DbSet<LoanApplication> LoanApplications { get; set; }
+        public DbSet<Loan> Loans { get; set; }
+        public DbSet<Installment> Installments { get; set; }
+        public DbSet<TransactionLog> TransactionLogs { get; set; }
+        public DbSet<CreditScore> CreditScores { get; set; }
+
+        private readonly DatabaseConfig _config;
+
+        public AppDbContext(DbContextOptions<AppDbContext> options, IOptions<DatabaseConfig> config)
+            : base(options)
+        {
+            _config = config.Value;
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // اعمال کانفیگ‌های موجودیت‌ها
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new LoanApplicationConfiguration());
+            modelBuilder.ApplyConfiguration(new LoanConfiguration());
+            modelBuilder.ApplyConfiguration(new InstallmentConfiguration());
+            modelBuilder.ApplyConfiguration(new TransactionLogConfiguration());
+            modelBuilder.ApplyConfiguration(new CreditScoreConfiguration());
+
+            // تنظیمات کلی
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var tableName = entityType.GetTableName();
+                if (tableName != null)
+                {
+                    entityType.SetTableName(tableName);
+                }
+            }
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

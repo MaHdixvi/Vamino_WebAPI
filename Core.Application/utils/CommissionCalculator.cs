@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Application.Services
+namespace Core.Applicationn.Services
 {
     /// <summary>
     /// سرویس محاسبه کمیسیون بانکی و درآمد پروژه

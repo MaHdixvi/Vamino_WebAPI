@@ -1,41 +1,74 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Infrastructure.Security;
+using Shared.Kernel;
+using Core.Application.DTOs;
 
 namespace Vamino_WebAPI.Controllers
 {
+    /// <summary>
+    /// کنترلر احراز هویت و مدیریت کاربران
+    /// </summary>
     public class AuthController : SiteBaseController
     {
-        // GET: api/<AuthController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly UserAuthenticationService _authService;
+        private readonly JwtTokenGenerator _tokenGenerator;
+
+        public AuthController(UserAuthenticationService authService, JwtTokenGenerator tokenGenerator)
         {
-            return new string[] { "value1", "value2" };
+            _authService = authService;
+            _tokenGenerator = tokenGenerator;
         }
 
-        // GET api/<AuthController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        /// <summary>
+        /// ثبت‌نام کاربر جدید
+        /// </summary>
+        [HttpPost("register")]
+        public async Task<ActionResult<Result<string>>> Register([FromBody] UserRegistrationDto model)
         {
-            return "value";
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(Result<string>.Failure(ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+            }
+
+            try
+            {
+                var userId = await _authService.RegisterAsync(new Domain.Entities.User
+                {
+                    Name = model.Name,
+                    NationalId = model.NationalId,
+                    PhoneNumber = model.PhoneNumber,
+                    Email = model.Email,
+                    BankAccountNumber = model.BankAccountNumber
+                });
+
+                return Ok(Result<string>.Success(userId, "ثبت‌نام با موفقیت انجام شد."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result<string>.Failure(new[] { ex.Message }));
+            }
         }
 
-        // POST api/<AuthController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        /// <summary>
+        /// ورود کاربر
+        /// </summary>
+        [HttpPost("login")]
+        public async Task<ActionResult<Result<string>>> Login([FromBody] UserLoginDto model)
         {
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(Result<string>.Failure(ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+            }
 
-        // PUT api/<AuthController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<AuthController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            try
+            {
+                var token = await _authService.LoginAsync(model.PhoneNumber, model.VerificationCode);
+                return Ok(Result<string>.Success(token, "ورود با موفقیت انجام شد."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result<string>.Failure(new[] { ex.Message }));
+            }
         }
     }
 }

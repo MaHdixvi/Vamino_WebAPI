@@ -16,5 +16,10 @@ namespace Domain.Entities
         public string Action { get; set; } // Apply, Approve, Pay, Reject
         public string RelatedEntity { get; set; } // LoanApplication, Loan
         public string Details { get; set; }
+        // ✅ اضافه شده: کلید خارجی به کاربر
+        public string UserId { get; set; }
+
+        // ✅ اضافه شده: Navigation Property به کاربر
+        public User User { get; set; }
     }
 }

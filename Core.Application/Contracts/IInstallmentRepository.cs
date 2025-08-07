@@ -20,5 +20,6 @@ namespace Core.Application.Contracts
         Task AddAsync(Installment installment);
         Task UpdateAsync(Installment installment);
         Task DeleteAsync(string id);
+        Task<IEnumerable<Installment>> GetAllAsync();
     }
 }

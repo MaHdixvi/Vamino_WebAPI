@@ -1,42 +1,55 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿using Core.Application.DTOs;
+using Core.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Kernel;
 
 namespace Vamino_WebAPI.Controllers
 {
-
+    /// <summary>
+    /// کنترلر مدیریت اعلان‌ها
+    /// </summary>
     public class NotificationController : SiteBaseController
     {
-        // GET: api/<NotificationController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly INotificationService _notificationService;
+
+        public NotificationController(INotificationService notificationService)
         {
-            return new string[] { "value1", "value2" };
+            _notificationService = notificationService;
         }
 
-        // GET api/<NotificationController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<NotificationController>
+        /// <summary>
+        /// ارسال یک اعلان به کاربر
+        /// </summary>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<ActionResult<Result>> Send([FromBody] NotificationDto notification)
         {
+            try
+            {
+                await _notificationService.SendNotificationAsync(notification);
+                return Ok(Result.Success("اعلان با موفقیت ارسال شد."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result.Failure(new[] { ex.Message }));
+            }
         }
 
-        // PUT api/<NotificationController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        /// <summary>
+        /// ارسال یادآوری پرداخت قسط
+        /// </summary>
+        [HttpPost("reminder")]
+        public async Task<ActionResult<Result>> SendReminder([FromBody] InstallmentReminderDto reminder)
         {
-        }
-
-        // DELETE api/<NotificationController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            try
+            {
+                await _notificationService.SendInstallmentReminderAsync(
+                    reminder.UserId, reminder.InstallmentId, reminder.DueDate);
+                return Ok(Result.Success("یادآوری با موفقیت ارسال شد."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result.Failure(new[] { ex.Message }));
+            }
         }
     }
 }
