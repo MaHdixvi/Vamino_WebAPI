@@ -1,4 +1,5 @@
-﻿using Core.Application.Exceptions;
+﻿// Vamino_WebAPI/Middleware/ExceptionHandlingMiddleware.cs
+using Core.Application.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shared.Kernel;
@@ -8,9 +9,6 @@ using System.Threading.Tasks;
 
 namespace Vamino_WebAPI.Middleware
 {
-    /// <summary>
-    /// میدلور مدیریت خطا برای کنترل استثناها و ارسال پاسخ استاندارد به کلاینت
-    /// </summary>
     public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;

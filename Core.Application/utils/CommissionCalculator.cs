@@ -5,17 +5,17 @@ namespace Core.Applicationn.Services
     /// <summary>
     /// سرویس محاسبه کمیسیون بانکی و درآمد پروژه
     /// </summary>
-    public class CommissionCalculator
+    public static class CommissionCalculator
     {
-        private readonly decimal _commissionRate = 0.02m; // 2% کمیسیون از مبلغ وام
-        private readonly decimal _transactionFeeRate = 0.01m; // 1% کارمزد تراکنش
+        private static readonly decimal _commissionRate = 0.02m; // 2% کمیسیون از مبلغ وام
+        private static readonly decimal _transactionFeeRate = 0.01m; // 1% کارمزد تراکنش
 
         /// <summary>
         /// محاسبه کمیسیون بانکی بر اساس مبلغ وام
         /// </summary>
         /// <param name="loanAmount">مبلغ وام</param>
         /// <returns>مبلغ کمیسیون</returns>
-        public decimal CalculateCommission(decimal loanAmount)
+        public static decimal CalculateCommission(decimal loanAmount)
         {
             return Math.Round(loanAmount * _commissionRate, 2);
         }
@@ -25,7 +25,7 @@ namespace Core.Applicationn.Services
         /// </summary>
         /// <param name="paymentAmount">مبلغ پرداخت</param>
         /// <returns>مبلغ کارمزد</returns>
-        public decimal CalculateTransactionFee(decimal paymentAmount)
+        public static decimal CalculateTransactionFee(decimal paymentAmount)
         {
             return Math.Round(paymentAmount * _transactionFeeRate, 2);
         }
@@ -36,7 +36,7 @@ namespace Core.Applicationn.Services
         /// <param name="loanAmount">مبلغ وام</param>
         /// <param name="numberOfInstallments">تعداد اقساط</param>
         /// <returns>مجموع درآمد پروژه</returns>
-        public decimal CalculateTotalRevenue(decimal loanAmount, int numberOfInstallments)
+        public static decimal CalculateTotalRevenue(decimal loanAmount, int numberOfInstallments)
         {
             var commission = CalculateCommission(loanAmount);
             var totalTransactionFees = CalculateTransactionFee(loanAmount / numberOfInstallments) * numberOfInstallments;
@@ -49,7 +49,7 @@ namespace Core.Applicationn.Services
         /// <param name="loanAmount">مبلغ وام</param>
         /// <param name="vatRate">نرخ مالیات (مثلاً 0.09 برای 9%)</param>
         /// <returns>مبلغ کمیسیون با مالیات</returns>
-        public decimal CalculateCommissionWithVAT(decimal loanAmount, decimal vatRate = 0.09m)
+        public static decimal CalculateCommissionWithVAT(decimal loanAmount, decimal vatRate = 0.09m)
         {
             var commission = CalculateCommission(loanAmount);
             return Math.Round(commission * (1 + vatRate), 2);

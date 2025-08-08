@@ -16,6 +16,11 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task AddAsync(Installment installment)
         {
+            installment.Id = Guid.NewGuid().ToString();
+            installment.CreatedAt = DateTime.UtcNow;
+            installment.CreatedBy = installment.Id;
+            installment.UpdatedBy = DateTime.UtcNow.ToString();
+
             await _context.Installments.AddAsync(installment);
             await _context.SaveChangesAsync();
         }

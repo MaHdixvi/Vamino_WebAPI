@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Core.Applicationn.Services;
 
 namespace Core.Application.Contracts
 {
@@ -70,8 +71,8 @@ namespace Core.Application.Contracts
 
         public Task<decimal> CalculateTotalAmountWithCommission(decimal amount)
         {
-            var commissionRate = 0.02m; // 2% کمیسیون
-            return Task.FromResult(amount * (1 + commissionRate));
+            var commission = CommissionCalculator.CalculateCommission(amount);
+            return Task.FromResult(amount + commission);
         }
     }
 }

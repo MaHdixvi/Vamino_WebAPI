@@ -139,7 +139,8 @@ namespace Application.Services
                     DueDate = DateTime.UtcNow.AddYears(3),
                     Status = "Active"
                 };
-
+                loan.InterestRate = "null";
+                loan.UserId = application.UserId;
                 await _loanRepository.AddAsync(loan);
 
                 // ایجاد اقساط

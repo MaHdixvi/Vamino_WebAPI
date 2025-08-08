@@ -11,6 +11,10 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
             builder.ToTable("Loans");
             builder.HasKey(l => l.Id);
 
+            builder.Property(l => l.Id)
+                .IsRequired()
+                .HasMaxLength(36);
+
             builder.Property(l => l.LoanApplicationId)
                 .IsRequired()
                 .HasMaxLength(36);
@@ -30,24 +34,25 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
                 .HasMaxLength(20);
 
             builder.Property(l => l.InterestRate)
-                .IsRequired()
                 .HasMaxLength(10);
 
             builder.Property(l => l.UserId)
                 .IsRequired()
                 .HasMaxLength(36);
 
-            // روابط
+            // ارتباط با کاربر
             builder.HasOne(l => l.User)
                 .WithMany(u => u.Loans)
                 .HasForeignKey(l => l.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // ارتباط یک به یک با LoanApplication
             builder.HasOne(l => l.LoanApplication)
                 .WithOne(la => la.Loan)
                 .HasForeignKey<Loan>(l => l.LoanApplicationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // ارتباط با Installment
             builder.HasMany(l => l.Installments)
                 .WithOne(i => i.Loan)
                 .HasForeignKey(i => i.LoanId)

@@ -16,6 +16,10 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task AddAsync(TransactionLog log)
         {
+            log.Id = Guid.NewGuid().ToString();
+            log.CreatedAt = DateTime.UtcNow;
+            log.CreatedBy = log.Id;
+            log.UpdatedBy = DateTime.UtcNow.ToString();
             await _context.TransactionLogs.AddAsync(log);
             await _context.SaveChangesAsync();
         }

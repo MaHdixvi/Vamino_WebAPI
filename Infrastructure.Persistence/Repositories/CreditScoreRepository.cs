@@ -17,7 +17,11 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task AddAsync(CreditScore creditScore)
         {
-            await _context.CreditScores.AddAsync(creditScore);
+            creditScore.Id = Guid.NewGuid().ToString();
+            creditScore.CreatedAt = DateTime.UtcNow;
+            creditScore.CreatedBy = creditScore.Id;
+            creditScore.UpdatedBy = DateTime.UtcNow.ToString();
+
             await _context.SaveChangesAsync();
         }
 

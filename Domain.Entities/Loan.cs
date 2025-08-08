@@ -14,7 +14,7 @@ namespace Domain.Entities
         public DateTime DisbursementDate { get; set; }
         public DateTime DueDate { get; set; }
         public string Status { get; set; } // Active, Paid, Overdue
-        public string InterestRate { get; set; }
+        public string? InterestRate { get; set; }
 
         // ✅ اضافه شده: کلید خارجی
         public string UserId { get; set; }

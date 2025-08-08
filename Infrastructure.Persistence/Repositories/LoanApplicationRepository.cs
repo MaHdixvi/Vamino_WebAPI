@@ -18,8 +18,27 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task AddAsync(LoanApplication application)
         {
-            await _context.LoanApplications.AddAsync(application);
-            await _context.SaveChangesAsync();
+            try {
+                application.Id = Guid.NewGuid().ToString();
+                application.CreatedAt = DateTime.UtcNow;
+                application.CreatedBy = application.Id;
+                application.UpdatedBy = DateTime.UtcNow.ToString();
+
+                await _context.LoanApplications.AddAsync(application);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // خطای مربوط به دیتابیس
+                throw new Exception($"خطا در ذخیره وام: {ex.InnerException.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                // خطاهای دیگر
+                throw new Exception($"خطای ناشناخته در ذخیره وام: {ex.Message}", ex);
+            }
+
+
         }
 
         public async Task DeleteAsync(string id)

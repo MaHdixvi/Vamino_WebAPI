@@ -1,25 +1,25 @@
 ﻿using Shared.Kernel;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
     /// <summary>
     /// قسط وام که به صورت ماهانه پرداخت می‌شود
     /// </summary>
-    public class Installment: BaseEntity
+    public class Installment:BaseEntity
     {
+        // ✅ تغییر این قسمت: باید طول 36 کاراکتر باشد
         public string LoanId { get; set; }
-        public int Number { get; set; } // شماره قسط (مثلاً 1 از 36)
-        public DateTime DueDate { get; set; } // تاریخ سررسید
-        public decimal PrincipalAmount { get; set; } // مبلغ اصل
-        public decimal InterestAmount { get; set; } // مبلغ بهره
-        public decimal TotalAmount { get; set; } // مجموع
+
+        public int Number { get; set; }
+        public DateTime DueDate { get; set; }
+        public decimal PrincipalAmount { get; set; }
+        public decimal InterestAmount { get; set; }
+        public decimal TotalAmount { get; set; }
         public string Status { get; set; } // Paid, Pending, Overdue
-        public DateTime? PaymentDate { get; set; } // تاریخ پرداخت (در صورت پرداخت)
+        public DateTime? PaymentDate { get; set; }
+
+        // ✅ اضافه شده: Navigation Property به وام
         public Loan Loan { get; set; }
     }
 }

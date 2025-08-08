@@ -103,7 +103,7 @@ namespace Application.Services
             var creditScoreDto = await CalculateCreditScoreAsync(userId);
 
             // شرایط واجدیت: نمره بالای 500 و مبلغ درخواستی کمتر از 100 میلیون تومان
-            return creditScoreDto.Score > 500 && requestedAmount <= 100_000_000;
+            return creditScoreDto.Score >= 500 && requestedAmount <= 100_000_000;
         }
 
         private string GenerateReason(int score, int paidLoans, int overdueLoans)

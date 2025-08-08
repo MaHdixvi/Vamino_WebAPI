@@ -1,8 +1,8 @@
-﻿using Application.Services;
+﻿// Program.cs
+using Application.Services;
 using Core.Application.Contracts;
 using Core.Application.Contracts.Messaging;
 using Core.Application.Services;
-using Core.Applicationn.Services;
 using Infrastructure.Messaging;
 using Infrastructure.Messaging.Configuration;
 using Infrastructure.Persistence.Configuration;
@@ -15,12 +15,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
 using Vamino_WebAPI.Middleware;
 
-
-        
- var builder = WebApplication.CreateBuilder(args);
+namespace Vamino_WebAPI
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
             // ثبت تنظیمات
             builder.Services.Configure<DatabaseConfig>(builder.Configuration.GetSection("Database"));
@@ -33,10 +38,26 @@ using Vamino_WebAPI.Middleware;
             // ثبت سرویس‌های امنیتی
             builder.Services.AddScoped<UserAuthenticationService>();
             builder.Services.AddScoped<RoleBasedAccessControl>();
-            builder.Services.AddScoped<JwtTokenGenerator>();
+
+            // ثبت JwtTokenGenerator با وابستگی‌های لازم
+            builder.Services.AddScoped<JwtTokenGenerator>(sp =>
+            {
+                var config = sp.GetRequiredService<IOptions<SecurityConfig>>().Value;
+                return new JwtTokenGenerator(
+                    config.JwtSecretKey,
+                    config.JwtIssuer,
+                    config.JwtAudience,
+                    config.JwtExpiryMinutes
+                );
+            });
 
             // ثبت سرویس‌های پیام‌رسانی
-            builder.Services.AddScoped<ISmsSender, SmsSender>();
+            builder.Services.AddScoped<ISmsSender>(sp =>
+            {
+                var config = sp.GetRequiredService<IOptions<MessagingConfig>>().Value;
+                return new SmsSender(config.SmsApiKey, config.SenderNumber);
+            });
+
             builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<INotificationManager, NotificationManager>();
 
@@ -45,14 +66,9 @@ using Vamino_WebAPI.Middleware;
             builder.Services.AddScoped<ICreditScoreCalculator, CreditScoreCalculator>();
             builder.Services.AddScoped<IPaymentProcessor, PaymentService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
-            builder.Services.AddScoped<InstallmentManagementService>();
+            builder.Services.AddScoped<IInstallmentManagementService, InstallmentManagementService>();
 
             // ثبت سرویس‌های دیگر
-            builder.Services.AddScoped<CommissionCalculator>();
-
-            // ثبت میدلورها
-            builder.Services.AddMiddleware<LoggingMiddleware>();
-            builder.Services.AddMiddleware<ExceptionHandlingMiddleware>();
 
             // ثبت API
             builder.Services.AddControllers();
@@ -74,8 +90,11 @@ using Vamino_WebAPI.Middleware;
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
+
+            // اضافه کردن میان‌برها به Pipeline
             app.UseMiddleware<LoggingMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             app.MapControllers();
 
             // اجرای مایگریشن‌ها در صورت نیاز
@@ -93,3 +112,6 @@ using Vamino_WebAPI.Middleware;
             }
 
             app.Run();
+        }
+    }
+}

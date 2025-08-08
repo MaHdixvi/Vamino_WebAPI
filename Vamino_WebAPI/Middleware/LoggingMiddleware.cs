@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿// Vamino_WebAPI/Middleware/LoggingMiddleware.cs
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
 namespace Vamino_WebAPI.Middleware
 {
-    /// <summary>
-    /// میدلور ثبت لاگ برای ثبت اطلاعات درخواست‌ها و پاسخ‌ها
-    /// </summary>
     public class LoggingMiddleware
     {
         private readonly RequestDelegate _next;
@@ -33,15 +31,6 @@ namespace Vamino_WebAPI.Middleware
                 request.Path,
                 request.QueryString);
 
-            // ثبت بدنه درخواست (اختیاری و با احتیاط)
-            if (request.ContentLength > 0)
-            {
-                request.EnableBuffering();
-                var requestBody = await new StreamReader(request.Body).ReadToEndAsync();
-                _logger.LogDebug("بدنه درخواست: {Body}", requestBody);
-                request.Body.Position = 0; // بازگرداندن پوزیشن برای خواندن توسط کنترلر
-            }
-
             // ایجاد یک Stream موقت برای ثبت بدنه پاسخ
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
@@ -60,8 +49,6 @@ namespace Vamino_WebAPI.Middleware
                 "پاسخ ارسال شد: {StatusCode} در {Duration}ms",
                 context.Response.StatusCode,
                 duration.TotalMilliseconds);
-
-            _logger.LogDebug("بدنه پاسخ: {Body}", responseText);
 
             // کپی کردن بدنه به پاسخ اصلی
             await responseBody.CopyToAsync(originalBodyStream);

@@ -11,7 +11,7 @@ namespace Core.Application.Services
     /// <summary>
     /// سرویس مدیریت اقساط وام
     /// </summary>
-    public class InstallmentManagementService
+    public class InstallmentManagementService:IInstallmentManagementService
     {
         private readonly IInstallmentRepository _installmentRepository;
         private readonly ILoanRepository _loanRepository;

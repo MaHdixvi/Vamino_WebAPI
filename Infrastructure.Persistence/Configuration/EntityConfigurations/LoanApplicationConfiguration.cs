@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configuration.EntityConfigurations
 {
-    /// <summary>
-    /// کانفیگ مدل برای موجودیت LoanApplication
-    /// </summary>
     public class LoanApplicationConfiguration : IEntityTypeConfiguration<LoanApplication>
     {
         public void Configure(EntityTypeBuilder<LoanApplication> builder)
@@ -43,7 +40,7 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
                 .HasForeignKey(la => la.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ارتباط یک به یک با وام
+            // ارتباط یک به یک با Loan
             builder.HasOne(la => la.Loan)
                 .WithOne(l => l.LoanApplication)
                 .HasForeignKey<Loan>(l => l.LoanApplicationId)

@@ -32,11 +32,15 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
             builder.Property(tl => tl.Details)
                 .HasMaxLength(500);
 
+            // تغییر این قسمت: UserId باید nullable باشد
+            builder.Property(tl => tl.UserId)
+                .HasMaxLength(36); // nullable است
+
             // ارتباط با User (اختیاری)
             builder.HasOne(tl => tl.User)
                 .WithMany(u => u.TransactionLogs)
                 .HasForeignKey(tl => tl.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull); // یا DeleteBehavior.NoAction
         }
     }
 }

@@ -10,17 +10,17 @@ namespace Infrastructure.Persistence.Configuration
         /// <summary>
         /// رشته اتصال به پایگاه داده SQL Server
         /// </summary>
-        public string ConnectionString { get; set; } = "Server=localhost;Database=VaminioDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;";
+        public string ConnectionString { get; set; } = ""; // مقدار پیش‌فرض حذف شد تا فقط از appsettings خوانده شود
 
         /// <summary>
         /// نام پایگاه داده
         /// </summary>
-        public string DatabaseName { get; set; } = "VaminioDb";
+        public string DatabaseName { get; set; } = "";
 
         /// <summary>
         /// نام سرور پایگاه داده
         /// </summary>
-        public string ServerName { get; set; } = "localhost";
+        public string ServerName { get; set; } = "";
 
         /// <summary>
         /// حداکثر تعداد اتصالات به دیتابیس
@@ -50,7 +50,7 @@ namespace Infrastructure.Persistence.Configuration
         /// <summary>
         /// رشته اتصال به Replica برای عملیات خواندن
         /// </summary>
-        public string ReadReplicaConnectionString { get; set; } = "Server=replica-server;Database=VaminioDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;";
+        public string ReadReplicaConnectionString { get; set; } = "";
 
         /// <summary>
         /// فعال بودن رمزگذاری ارتباط با دیتابیس

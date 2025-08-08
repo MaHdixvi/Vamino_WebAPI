@@ -13,12 +13,12 @@ namespace Domain.Entities
         public DateTime SubmitDate { get; set; }
         public decimal RequestedAmount { get; set; }
         public string Status { get; set; } // Pending, Approved, Rejected
-        public string ReasonForRejection { get; set; }
+        public string? ReasonForRejection { get; set; }
 
         // ✅ اضافه شده: Navigation Property به کاربر
         public User User { get; set; }
 
-        // ✅ اضافه شده: Navigation Property به وام
+        // ✅ اضافه شده: Navigation Property به وام (یک به یک)
         public Loan Loan { get; set; }
 
         // ✅ اضافه شده: Navigation Property به اقساط

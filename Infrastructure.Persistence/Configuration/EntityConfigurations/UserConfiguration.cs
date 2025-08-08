@@ -13,7 +13,6 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
         {
             builder.ToTable("Users");
             builder.HasKey(u => u.Id);
-
             builder.Property(u => u.Id)
                 .IsRequired()
                 .HasMaxLength(36);
