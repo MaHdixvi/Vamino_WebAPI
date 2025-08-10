@@ -22,7 +22,7 @@ namespace Vamino_WebAPI.Controllers
         /// <summary>
         /// ثبت‌نام کاربر جدید
         /// </summary>
-        [HttpPost("register")]
+        [HttpPost("auth/register")]
         public async Task<ActionResult<Result<string>>> Register([FromBody] UserRegistrationDto model)
         {
             if (!ModelState.IsValid)
@@ -52,7 +52,7 @@ namespace Vamino_WebAPI.Controllers
         /// <summary>
         /// ورود کاربر
         /// </summary>
-        [HttpPost("login")]
+        [HttpPost("auth/login")]
         public async Task<ActionResult<Result<string>>> Login([FromBody] UserLoginDto model)
         {
             if (!ModelState.IsValid)
