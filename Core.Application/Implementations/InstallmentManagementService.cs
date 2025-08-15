@@ -14,12 +14,12 @@ namespace Core.Application.Services
     public class InstallmentManagementService:IInstallmentManagementService
     {
         private readonly IInstallmentRepository _installmentRepository;
-        private readonly ILoanRepository _loanRepository;
+        private readonly ILoanApplicationRepository _loanApplicationRepository;
 
-        public InstallmentManagementService(IInstallmentRepository installmentRepository, ILoanRepository loanRepository)
+        public InstallmentManagementService(IInstallmentRepository installmentRepository, ILoanApplicationRepository loanApplicationRepository)
         {
             _installmentRepository = installmentRepository;
-            _loanRepository = loanRepository;
+            _loanApplicationRepository = loanApplicationRepository;
         }
 
         /// <summary>
@@ -29,10 +29,10 @@ namespace Core.Application.Services
         /// <param name="amount">مبلغ کل وام</param>
         /// <param name="numberOfInstallments">تعداد اقساط (مثلاً 36)</param>
         /// <returns>لیست اقساط</returns>
-        public async Task<IEnumerable<Installment>> GenerateInstallmentScheduleAsync(string loanId, decimal amount, int numberOfInstallments)
+        public async Task<IEnumerable<Installment>> GenerateInstallmentScheduleAsync(string loanAppId, decimal amount, int numberOfInstallments)
         {
-            var loan = await _loanRepository.GetByIdAsync(loanId);
-            if (loan == null) throw new NotFoundException($"وام با شناسه {loanId} یافت نشد.");
+            var loan = await _loanApplicationRepository.GetByIdAsync(loanAppId);
+            if (loan == null) throw new NotFoundException($"وام با شناسه {loanAppId} یافت نشد.");
 
             var installments = new List<Installment>();
             var principalPerInstallment = amount / numberOfInstallments;
@@ -45,14 +45,15 @@ namespace Core.Application.Services
                 var installment = new Installment
                 {
                     Id = Guid.NewGuid().ToString(),
-                    LoanId = loanId,
+                    LoanApplicationId = loanAppId,
                     Number = i,
-                    DueDate = DateHelper.CalculateInstallmentDueDate(loan.DisbursementDate, i),
+                    DueDate = DateHelper.CalculateInstallmentDueDate(loan.CreatedAt, i),
                     PrincipalAmount = MathHelper.RoundToTwoDecimals(principalPerInstallment),
                     InterestAmount = MathHelper.RoundToTwoDecimals(interestPerInstallment),
                     TotalAmount = MathHelper.RoundToTwoDecimals(principalPerInstallment + interestPerInstallment),
                     Status = "Pending"
                 };
+                await _installmentRepository.AddAsync(installment);
                 installments.Add(installment);
             }
 

@@ -45,6 +45,11 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
                 .WithOne(l => l.LoanApplication)
                 .HasForeignKey<Loan>(l => l.LoanApplicationId)
                 .OnDelete(DeleteBehavior.Cascade);
+            // ارتباط با Installment
+            builder.HasMany(l => l.Installments)
+                .WithOne(i => i.LoanApplication)
+                .HasForeignKey(i => i.LoanApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

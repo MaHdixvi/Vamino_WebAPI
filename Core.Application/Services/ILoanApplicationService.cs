@@ -10,10 +10,10 @@ namespace Core.Application.Services
     /// </summary>
     public interface ILoanApplicationService
     {
-        Task<LoanRequestDto> CreateLoanApplicationAsync(LoanRequestDto loanRequest);
-        Task<LoanRequestDto> GetLoanApplicationByIdAsync(string id);
-        Task<IEnumerable<LoanRequestDto>> GetLoanApplicationsByUserIdAsync(string userId);
-        Task<IEnumerable<LoanRequestDto>> GetAllLoanApplicationsAsync();
+        Task<LoanApplicationDTO> CreateLoanApplicationAsync(LoanRequestDto loanRequest);
+        Task<LoanApplicationDTO> GetLoanApplicationByIdAsync(string id);
+        Task<IEnumerable<LoanApplicationDTO>> GetLoanApplicationsByUserIdAsync(string userId);
+        Task<IEnumerable<LoanApplicationDTO>> GetAllLoanApplicationsAsync();
         Task UpdateLoanApplicationStatusAsync(string id, string status, string reason = null);
         Task DeleteLoanApplicationAsync(string id);
     }

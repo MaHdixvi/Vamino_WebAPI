@@ -1,20 +1,26 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Core.Application.Contracts;
+using Core.Application.DTOs;
 using Domain.Entities;
-using Core.Application.Contracts;
+using BCrypt.Net;
+using System;
+using System.Threading.Tasks;
+using System.Security.Authentication;
 
 namespace Infrastructure.Security
 {
     /// <summary>
-    /// سرویس احراز هویت کاربران با استفاده از شماره موبایل و کد تأیید
+    /// سرویس احراز هویت و مدیریت پروفایل کاربران
     /// </summary>
-    public class UserAuthenticationService
+    public class UserAuthenticationService : IUserAuthenticationService
     {
         private readonly IUserRepository _userRepository;
         private readonly JwtTokenGenerator _tokenGenerator;
         private readonly string _defaultRole;
 
-        public UserAuthenticationService(IUserRepository userRepository, JwtTokenGenerator tokenGenerator, string defaultRole = "User")
+        public UserAuthenticationService(
+            IUserRepository userRepository,
+            JwtTokenGenerator tokenGenerator,
+            string defaultRole = "User")
         {
             _userRepository = userRepository;
             _tokenGenerator = tokenGenerator;
@@ -22,46 +28,143 @@ namespace Infrastructure.Security
         }
 
         /// <summary>
-        /// ورود کاربر با شماره موبایل و کد تأیید
+        /// ورود کاربر با نام کاربری و رمز عبور
         /// </summary>
-        /// <param name="phoneNumber">شماره موبایل</param>
-        /// <param name="verificationCode">کد تأیید</param>
-        /// <returns>توکن JWT در صورت موفقیت</returns>
-        public async Task<string> LoginAsync(string phoneNumber, string verificationCode)
+        public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
         {
-            // در عمل، کد تأیید باید از سیستم پیامک یا کش (مثل Redis) بررسی شود
-            // برای سادگی، فرض می‌کنیم کد 1234 معتبر است
-            if (verificationCode != "1234")
-            {
-                throw new Exception("کد تأیید نامعتبر است.");
-            }
-
-            var user = await _userRepository.GetByPhoneNumberAsync(phoneNumber);
+            var user = await _userRepository.GetByUsernameAsync(dto.Username);
             if (user == null)
             {
-                throw new Exception("کاربری با این شماره موبایل یافت نشد.");
+                throw new AuthenticationException("اعتبارسنجی ناموفق: کاربر یافت نشد");
             }
 
-            return _tokenGenerator.GenerateToken(user.Id, _defaultRole);
+            if (!VerifyPassword(user, dto.Password))
+            {
+                throw new AuthenticationException("اعتبارسنجی ناموفق: رمز عبور نادرست");
+            }
+
+            var token = _tokenGenerator.GenerateToken(user.Id);
+
+            return new AuthResponseDto
+            {
+                Token = token,
+                UserId = user.Id,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email
+            };
         }
 
         /// <summary>
         /// ثبت‌نام کاربر جدید
         /// </summary>
-        /// <param name="user">اطلاعات کاربر</param>
-        /// <returns>شناسه کاربر جدید</returns>
-        public async Task<string> RegisterAsync(User user)
+        public async Task<RegistrationResponseDto> RegisterAsync(UserRegistrationDto dto)
         {
-            if (await _userRepository.GetByPhoneNumberAsync(user.PhoneNumber) != null)
+            if (await _userRepository.GetByPhoneNumberAsync(dto.PhoneNumber) != null)
             {
-                throw new Exception("کاربری با این شماره موبایل قبلاً ثبت‌نام کرده است.");
+                throw new ArgumentException("شماره موبایل تکراری است");
             }
 
-            user.Id = Guid.NewGuid().ToString();
-            user.CreatedAt = DateTime.UtcNow;
+            if (await _userRepository.GetByEmailAsync(dto.Email) != null)
+            {
+                throw new ArgumentException("آدرس ایمیل تکراری است");
+            }
+
+            var user = new User
+            {
+                Id = Guid.NewGuid().ToString(),
+                Username = dto.Name,
+                Name = dto.Name,
+                NationalId = dto.NationalId,
+                PhoneNumber = dto.PhoneNumber,
+                Email = dto.Email,
+                BankAccountNumber = dto.BankAccountNumber,
+                CreatedAt = DateTime.UtcNow,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+            };
+
             await _userRepository.AddAsync(user);
 
-            return user.Id;
+            return new RegistrationResponseDto
+            {
+                UserId = user.Id,
+                Token = _tokenGenerator.GenerateToken(user.Id)
+            };
+        }
+
+        /// <summary>
+        /// به‌روزرسانی پروفایل کاربر
+        /// </summary>
+        public async Task<UserProfileDto> UpdateProfileAsync(UserProfileDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(dto.UserId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("کاربر یافت نشد");
+            }
+
+            // به‌روزرسانی فیلدها
+            user.Name = dto.Name ?? user.Name;
+            user.Email = dto.Email ?? user.Email;
+            user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
+            user.BankAccountNumber = dto.BankAccountNumber ?? user.BankAccountNumber;
+
+            await _userRepository.UpdateAsync(user);
+
+            return MapToProfileDto(user);
+        }
+
+        /// <summary>
+        /// تغییر رمز عبور
+        /// </summary>
+        public async Task ChangePasswordAsync(string userId, ChangePasswordDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("کاربر یافت نشد");
+            }
+
+            if (!VerifyPassword(user, dto.CurrentPassword))
+            {
+                throw new AuthenticationException("رمز عبور فعلی نادرست است");
+            }
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            await _userRepository.UpdateAsync(user);
+        }
+
+        /// <summary>
+        /// دریافت اطلاعات پروفایل کاربر
+        /// </summary>
+        public async Task<UserProfileDto> GetProfileAsync(string userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("کاربر یافت نشد");
+            }
+
+            return MapToProfileDto(user);
+        }
+
+        private bool VerifyPassword(User user, string password)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, user.Password);
+        }
+
+        private UserProfileDto MapToProfileDto(User user)
+        {
+            return new UserProfileDto
+            {
+                UserId = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                BankAccountNumber = user.BankAccountNumber,
+                NationalId = user.NationalId,
+                CreatedAt = user.CreatedAt
+            };
         }
     }
 }

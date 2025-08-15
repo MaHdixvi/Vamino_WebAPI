@@ -18,7 +18,7 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
                 .IsRequired()
                 .HasMaxLength(36);
 
-            builder.Property(i => i.LoanId)
+            builder.Property(i => i.LoanApplicationId)
                 .IsRequired()
                 .HasMaxLength(36); // ✅ باید 36 کاراکتر باشد
 
@@ -48,10 +48,10 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
             builder.Property(i => i.PaymentDate)
                 .IsRequired(false);
 
-            // ارتباط با Loan
-            builder.HasOne(i => i.Loan)
+            // ارتباط با LoanApplication
+            builder.HasOne(i => i.LoanApplication)
                 .WithMany(l => l.Installments)
-                .HasForeignKey(i => i.LoanId)
+                .HasForeignKey(i => i.LoanApplicationId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

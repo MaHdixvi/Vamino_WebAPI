@@ -9,7 +9,7 @@ namespace Domain.Entities
     public class Installment:BaseEntity
     {
         // ✅ تغییر این قسمت: باید طول 36 کاراکتر باشد
-        public string LoanId { get; set; }
+        public string LoanApplicationId { get; set; }
 
         public int Number { get; set; }
         public DateTime DueDate { get; set; }
@@ -20,6 +20,7 @@ namespace Domain.Entities
         public DateTime? PaymentDate { get; set; }
 
         // ✅ اضافه شده: Navigation Property به وام
-        public Loan Loan { get; set; }
+        public LoanApplication LoanApplication { get; set; }
+
     }
 }

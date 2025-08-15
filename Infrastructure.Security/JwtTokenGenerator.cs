@@ -30,7 +30,7 @@ namespace Infrastructure.Security
         /// <param name="userId">شناسه کاربر</param>
         /// <param name="role">نقش کاربر (User, Admin)</param>
         /// <returns>رشته توکن JWT</returns>
-        public string GenerateToken(string userId, string role)
+        public string GenerateToken(string userId)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -40,7 +40,6 @@ namespace Infrastructure.Security
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, role)
             };
 
             var token = new JwtSecurityToken(

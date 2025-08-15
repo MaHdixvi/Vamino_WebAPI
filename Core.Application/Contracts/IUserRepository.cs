@@ -15,6 +15,8 @@ namespace Core.Application.Contracts
         Task<User> GetByIdAsync(string id);
         Task<User> GetByNationalIdAsync(string nationalId);
         Task<User> GetByPhoneNumberAsync(string phoneNumber);
+        Task<User> GetByUsernameAsync(string username);
+        Task<User> GetByEmailAsync(string email);
         Task AddAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(string id);

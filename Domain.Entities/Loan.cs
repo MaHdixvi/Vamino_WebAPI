@@ -25,7 +25,6 @@ namespace Domain.Entities
         // ✅ اضافه شده: Navigation Property به درخواست وام
         public LoanApplication LoanApplication { get; set; }
 
-        // اضافه شده: Navigation Property به اقساط
-        public ICollection<Installment> Installments { get; set; } = new List<Installment>();
+
     }
 }

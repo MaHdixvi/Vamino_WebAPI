@@ -8,17 +8,17 @@ namespace Core.Application.DTOs
     public class UserLoginDto
     {
         /// <summary>
-        /// شماره موبایل کاربر
+        /// نام کاربری
         /// </summary>
-        [Required(ErrorMessage = "شماره موبایل الزامی است.")]
-        [StringLength(11, MinimumLength = 11, ErrorMessage = "شماره موبایل باید 11 رقم باشد.")]
-        public string PhoneNumber { get; set; }
+        [Required(ErrorMessage = "نام کاربری الزامی است.")]
+        [StringLength(50, ErrorMessage = "نام کاربری نباید بیشتر از 50 کاراکتر باشد.")]
+        public string Username { get; set; }
 
         /// <summary>
-        /// کد تأیید (کد پیامک شده)
+        /// رمز عبور
         /// </summary>
-        [Required(ErrorMessage = "کد تأیید الزامی است.")]
-        [StringLength(6, MinimumLength = 6, ErrorMessage = "کد تأیید باید 6 رقم باشد.")]
-        public string VerificationCode { get; set; }
+        [Required(ErrorMessage = "رمز عبور الزامی است.")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "رمز عبور باید حداقل 6 کاراکتر باشد.")]
+        public string Password { get; set; }
     }
 }

@@ -38,29 +38,29 @@ namespace Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<Installment>> GetAllAsync()
         {
             return await _context.Installments
-                .Include(i => i.Loan)
+                .Include(i => i.LoanApplication)
                 .ToListAsync();
         }
 
         public async Task<Installment> GetByIdAsync(string id)
         {
             return await _context.Installments
-                .Include(i => i.Loan)
+                .Include(i => i.LoanApplication)
                 .FirstOrDefaultAsync(i => i.Id == id);
         }
 
-        public async Task<IEnumerable<Installment>> GetByLoanIdAsync(string loanId)
+        public async Task<IEnumerable<Installment>> GetByLoanIdAsync(string loanAppId)
         {
             return await _context.Installments
-                .Where(i => i.LoanId == loanId)
+                .Where(i => i.LoanApplicationId == loanAppId)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Installment>> GetByUserIdAsync(string userId)
         {
             return await _context.Installments
-                .Include(i => i.Loan)
-                .Where(i => i.Loan.UserId == userId)
+                .Include(i => i.LoanApplication)
+                .Where(i => i.LoanApplication.UserId == userId)
                 .ToListAsync();
         }
 

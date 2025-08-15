@@ -28,12 +28,12 @@ namespace Vamino_WebAPI.Controllers
         /// دریافت لیست تمام درخواست‌های وام
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<Result<IEnumerable<LoanRequestDto>>>> GetAllLoanApplications()
+        public async Task<ActionResult<Result<IEnumerable<LoanApplicationDTO>>>> GetAllLoanApplications()
         {
             try
             {
                 var applications = await _loanApplicationService.GetAllLoanApplicationsAsync();
-                return Ok(Result<IEnumerable<LoanRequestDto>>.Success(applications));
+                return Ok(Result<IEnumerable<LoanApplicationDTO>>.Success(applications));
             }
             catch (Exception ex)
             {
@@ -46,7 +46,7 @@ namespace Vamino_WebAPI.Controllers
         /// </summary>
         /// <param name="id">شناسه درخواست</param>
         [HttpGet("{id}")]
-        public async Task<ActionResult<Result<LoanRequestDto>>> GetLoanApplication(string id)
+        public async Task<ActionResult<Result<LoanApplicationDTO>>> GetLoanApplication(string id)
         {
             try
             {
@@ -55,11 +55,11 @@ namespace Vamino_WebAPI.Controllers
                 {
                     return NotFound(Result<LoanRequestDto>.Failure("درخواست وام یافت نشد."));
                 }
-                return Ok(Result<LoanRequestDto>.Success(application));
+                return Ok(Result<LoanApplicationDTO>.Success(application));
             }
             catch (NotFoundException ex)
             {
-                return NotFound(Result<LoanRequestDto>.Failure(ex.Message));
+                return NotFound(Result<LoanApplicationDTO>.Failure(ex.Message));
             }
             catch (Exception ex)
             {

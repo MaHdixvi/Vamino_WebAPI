@@ -1,7 +1,7 @@
-﻿// Program.cs
-using Application.Services;
+﻿using Application.Services;
 using Core.Application.Contracts;
 using Core.Application.Contracts.Messaging;
+using Core.Application.Implementations;
 using Core.Application.Services;
 using Infrastructure.Messaging;
 using Infrastructure.Messaging.Configuration;
@@ -32,14 +32,29 @@ namespace Vamino_WebAPI
             builder.Services.Configure<SecurityConfig>(builder.Configuration.GetSection("Security"));
             builder.Services.Configure<MessagingConfig>(builder.Configuration.GetSection("Messaging"));
 
+            // خواندن دامین‌های مجاز از appsettings.json
+            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new string[0];
+
+            // تعریف CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("DynamicCorsPolicy", policy =>
+                {
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
             // ثبت سرویس‌های زیرساخت
             builder.Services.AddPersistenceServices();
 
             // ثبت سرویس‌های امنیتی
-            builder.Services.AddScoped<UserAuthenticationService>();
+            builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
             builder.Services.AddScoped<RoleBasedAccessControl>();
 
-            // ثبت JwtTokenGenerator با وابستگی‌های لازم
+            // ثبت JwtTokenGenerator
             builder.Services.AddScoped<JwtTokenGenerator>(sp =>
             {
                 var config = sp.GetRequiredService<IOptions<SecurityConfig>>().Value;
@@ -67,13 +82,12 @@ namespace Vamino_WebAPI
             builder.Services.AddScoped<IPaymentProcessor, PaymentService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IInstallmentManagementService, InstallmentManagementService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
-            // ثبت سرویس‌های دیگر
 
-            // ثبت API
             builder.Services.AddControllers();
 
-            // ثبت Swagger (در محیط توسعه)
+            // Swagger
             if (builder.Environment.IsDevelopment())
             {
                 builder.Services.AddSwaggerGen();
@@ -81,7 +95,7 @@ namespace Vamino_WebAPI
 
             var app = builder.Build();
 
-            // تنظیمات Pipeline HTTP
+            // Middleware
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -89,21 +103,25 @@ namespace Vamino_WebAPI
             }
 
             app.UseHttpsRedirection();
+
+            // فعال کردن CORS قبل از Authorization
+            app.UseCors("DynamicCorsPolicy");
+
             app.UseAuthorization();
 
-            // اضافه کردن میان‌برها به Pipeline
+            // میان‌افزارها
             app.UseMiddleware<LoggingMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.MapControllers();
 
-            // اجرای مایگریشن‌ها در صورت نیاز
+            // مایگریشن‌ها
             using (var scope = app.Services.CreateScope())
             {
                 try
                 {
                     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    context.Database.Migrate(); // اعمال مایگریشن‌ها
+                    context.Database.Migrate();
                 }
                 catch (Exception ex)
                 {

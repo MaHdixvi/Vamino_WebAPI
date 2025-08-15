@@ -4,6 +4,7 @@ using Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Repositories
@@ -60,7 +61,58 @@ namespace Infrastructure.Persistence.Repositories
                 throw new Exception($"خطای ناشناخته در حذف کاربر: {ex.Message}", ex);
             }
         }
+        public async Task<User> GetByEmailAsync(string email)
+        {
+            // Validate email format
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("آدرس ایمیل نمی‌تواند خالی باشد", nameof(email));
+            }
 
+            if (!IsValidEmail(email))
+            {
+                throw new ArgumentException("فرمت آدرس ایمیل نامعتبر است", nameof(email));
+            }
+
+            // Normalize email
+            email = email.Trim().ToLowerInvariant();
+
+            try
+            {
+                var user = await _context.Users
+                    .AsNoTracking() // Recommended for read-only operations
+                    .FirstOrDefaultAsync(u => u.Email == email);
+
+                return user ?? throw new KeyNotFoundException("کاربر یافت نشد");
+            }
+            catch (KeyNotFoundException)
+            {
+                // Re-throw with original message
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("خطا در پردازش درخواست دریافت کاربر");
+            }
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                // More comprehensive email validation
+                return Regex.IsMatch(email,
+                    @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                    RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                return false;
+            }
+        }
         public async Task<User> GetByIdAsync(string id)
         {
             try
@@ -98,6 +150,13 @@ namespace Infrastructure.Persistence.Repositories
                 throw new Exception($"خطا در جستجوی کاربر با شماره موبایل: {ex.Message}", ex);
             }
         }
+
+        public async Task<User> GetByUsernameAsync(string username)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+        }
+
 
         public async Task UpdateAsync(User user)
         {

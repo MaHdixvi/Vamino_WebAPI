@@ -14,6 +14,7 @@ namespace Domain.Entities
         public decimal RequestedAmount { get; set; }
         public string Status { get; set; } // Pending, Approved, Rejected
         public string? ReasonForRejection { get; set; }
+        public string? Purpose { get; set; }
 
         // ✅ اضافه شده: Navigation Property به کاربر
         public User User { get; set; }

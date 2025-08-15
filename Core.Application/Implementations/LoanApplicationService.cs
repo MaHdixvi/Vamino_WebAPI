@@ -7,6 +7,7 @@ using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Application.Services
 {
@@ -35,7 +36,7 @@ namespace Application.Services
             _installmentRepository = installmentRepository;
         }
 
-        public async Task<LoanRequestDto> CreateLoanApplicationAsync(LoanRequestDto loanRequest)
+        public async Task<LoanApplicationDTO> CreateLoanApplicationAsync(LoanRequestDto loanRequest)
         {
             // بررسی اعتبار کاربر
             var isEligible = await _creditScoreCalculator.IsUserEligibleForLoanAsync(
@@ -54,20 +55,22 @@ namespace Application.Services
                 RequestedAmount = loanRequest.RequestedAmount,
                 SubmitDate = DateTime.UtcNow,
                 Status = "Pending",
-                ReasonForRejection = null
+                ReasonForRejection = null,
+                Purpose=loanRequest.Purpose
             };
 
             await _loanApplicationRepository.AddAsync(application);
 
-            return new LoanRequestDto
+            return new LoanApplicationDTO
             {
+                Id=application.Id,
                 UserId = application.UserId,
                 RequestedAmount = application.RequestedAmount,
                 NumberOfInstallments = loanRequest.NumberOfInstallments
             };
         }
 
-        public async Task<LoanRequestDto> GetLoanApplicationByIdAsync(string id)
+        public async Task<LoanApplicationDTO> GetLoanApplicationByIdAsync(string id)
         {
             var application = await _loanApplicationRepository.GetByIdAsync(id);
             if (application == null)
@@ -75,41 +78,53 @@ namespace Application.Services
                 throw new NotFoundException($"درخواست وام با شناسه {id} یافت نشد.");
             }
 
-            return new LoanRequestDto
+            return new LoanApplicationDTO
             {
+                Id = application.Id,
                 UserId = application.UserId,
-                RequestedAmount = application.RequestedAmount
+                RequestedAmount = application.RequestedAmount,
+                Status = application.Status,
+                SubmitDate = application.SubmitDate,
+                Purpose = application.Purpose
             };
         }
 
-        public async Task<IEnumerable<LoanRequestDto>> GetLoanApplicationsByUserIdAsync(string userId)
+        public async Task<IEnumerable<LoanApplicationDTO>> GetLoanApplicationsByUserIdAsync(string userId)
         {
             var applications = await _loanApplicationRepository.GetByUserIdAsync(userId);
-            var dtos = new List<LoanRequestDto>();
+            var dtos = new List<LoanApplicationDTO>();
 
             foreach (var app in applications)
             {
-                dtos.Add(new LoanRequestDto
+                dtos.Add(new LoanApplicationDTO
                 {
+                    Id = app.Id,
                     UserId = app.UserId,
-                    RequestedAmount = app.RequestedAmount
+                    RequestedAmount = app.RequestedAmount,
+                    Status = app.Status,
+                    SubmitDate = app.SubmitDate,
+                    Purpose = app.Purpose
                 });
             }
 
             return dtos;
         }
 
-        public async Task<IEnumerable<LoanRequestDto>> GetAllLoanApplicationsAsync()
+        public async Task<IEnumerable<LoanApplicationDTO>> GetAllLoanApplicationsAsync()
         {
             var applications = await _loanApplicationRepository.GetAllAsync();
-            var dtos = new List<LoanRequestDto>();
+            var dtos = new List<LoanApplicationDTO>();
 
             foreach (var app in applications)
             {
-                dtos.Add(new LoanRequestDto
+                dtos.Add(new LoanApplicationDTO
                 {
+                    Id = app.Id,
                     UserId = app.UserId,
-                    RequestedAmount = app.RequestedAmount
+                    RequestedAmount = app.RequestedAmount,
+                    Status = app.Status,
+                    SubmitDate = app.SubmitDate,
+                    Purpose = app.Purpose
                 });
             }
 
@@ -176,7 +191,7 @@ namespace Application.Services
                 var installment = new Installment
                 {
                     Id = Guid.NewGuid().ToString(),
-                    LoanId = loanId,
+                    LoanApplicationId = loanId,
                     Number = i,
                     DueDate = DateTime.UtcNow.AddMonths(i),
                     PrincipalAmount = MathHelper.RoundToTwoDecimals(principalPerInstallment),
