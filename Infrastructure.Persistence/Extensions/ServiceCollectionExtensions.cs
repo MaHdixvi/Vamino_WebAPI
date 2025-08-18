@@ -41,6 +41,15 @@ namespace Infrastructure.Persistence.Extensions
             services.AddScoped<IInstallmentRepository, InstallmentRepository>();
             services.AddScoped<ITransactionLogRepository, TransactionLogRepository>();
             services.AddScoped<ICreditScoreRepository, CreditScoreRepository>();
+            services.AddScoped<IWalletRepository, WalletRepository>();
+            services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
+            services.AddScoped<IRecipientRepository, RecipientRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+
+
+
+
 
             return services;
         }

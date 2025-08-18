@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Persistence.Configuration.EntityConfigurations
+namespace Infrastructure.Persistence.Configuration.builderConfigurations
 {
     /// <summary>
     /// کانفیگ مدل برای موجودیت TransactionLog
@@ -11,36 +11,55 @@ namespace Infrastructure.Persistence.Configuration.EntityConfigurations
     {
         public void Configure(EntityTypeBuilder<TransactionLog> builder)
         {
+            // نام جدول در دیتابیس
             builder.ToTable("TransactionLogs");
-            builder.HasKey(tl => tl.Id);
 
-            builder.Property(tl => tl.Id)
-                .IsRequired()
-                .HasMaxLength(36);
+            // تنظیمات فیلدها
+            builder.Property(e => e.Timestamp)
+                .HasColumnType("datetime2")
+                .HasDefaultValueSql("GETUTCDATE()"); // مقدار پیش‌فرض زمان فعلی
 
-            builder.Property(tl => tl.Timestamp)
-                .IsRequired();
-
-            builder.Property(tl => tl.Action)
+            builder.Property(e => e.Action)
                 .IsRequired()
                 .HasMaxLength(50);
 
-            builder.Property(tl => tl.RelatedEntity)
+            builder.Property(e => e.RelatedEntity)
                 .IsRequired()
                 .HasMaxLength(50);
 
-            builder.Property(tl => tl.Details)
+            builder.Property(e => e.EntityId)
+                .HasMaxLength(100);
+
+            builder.Property(e => e.Details)
                 .HasMaxLength(500);
 
-            // تغییر این قسمت: UserId باید nullable باشد
-            builder.Property(tl => tl.UserId)
-                .HasMaxLength(36); // nullable است
+            builder.Property(e => e.UserId)
+               .IsRequired(false); // حتماً اضافه شود
 
-            // ارتباط با User (اختیاری)
-            builder.HasOne(tl => tl.User)
-                .WithMany(u => u.TransactionLogs)
-                .HasForeignKey(tl => tl.UserId)
-                .OnDelete(DeleteBehavior.SetNull); // یا DeleteBehavior.NoAction
+            builder.Property(e => e.TrackingCode)
+                .HasMaxLength(50);
+
+            builder.Property(e => e.Amount)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Property(e => e.PaymentMethod)
+                .HasMaxLength(50);
+
+            builder.Property(e => e.IPAddress)
+                .HasMaxLength(20);
+
+            // تنظیمات رابطه با کاربر
+            builder.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull); // در صورت حذف کاربر، مقدار null شود
+
+            // ایندکس‌گذاری برای بهبود کارایی
+            builder.HasIndex(e => e.Timestamp);
+            builder.HasIndex(e => e.Action);
+            builder.HasIndex(e => new { e.RelatedEntity, e.EntityId });
+            builder.HasIndex(e => e.UserId);
+            builder.HasIndex(e => e.TrackingCode).IsUnique();
         }
-    }
+     }
 }

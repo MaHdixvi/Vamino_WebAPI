@@ -77,23 +77,14 @@ namespace Infrastructure.Persistence.Repositories
             // Normalize email
             email = email.Trim().ToLowerInvariant();
 
-            try
-            {
+
                 var user = await _context.Users
                     .AsNoTracking() // Recommended for read-only operations
                     .FirstOrDefaultAsync(u => u.Email == email);
 
-                return user ?? throw new KeyNotFoundException("کاربر یافت نشد");
-            }
-            catch (KeyNotFoundException)
-            {
-                // Re-throw with original message
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new ApplicationException("خطا در پردازش درخواست دریافت کاربر");
-            }
+                return user ;
+
+            
         }
 
         private static bool IsValidEmail(string email)

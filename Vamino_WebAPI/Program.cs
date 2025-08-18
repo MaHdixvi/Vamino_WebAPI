@@ -10,126 +10,122 @@ using Infrastructure.Persistence.Data;
 using Infrastructure.Persistence.Extensions;
 using Infrastructure.Security;
 using Infrastructure.Security.Configuration;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using System;
 using Vamino_WebAPI.Middleware;
 
-namespace Vamino_WebAPI
+var builder = WebApplication.CreateBuilder(args);
+
+// ثبت تنظیمات
+builder.Services.Configure<DatabaseConfig>(builder.Configuration.GetSection("Database"));
+builder.Services.Configure<SecurityConfig>(builder.Configuration.GetSection("Security"));
+builder.Services.Configure<MessagingConfig>(builder.Configuration.GetSection("Messaging"));
+
+// خواندن دامین‌های مجاز از appsettings.json
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new string[0];
+
+// تعریف CORS
+builder.Services.AddCors(options =>
 {
-    public class Program
+    options.AddPolicy("DynamicCorsPolicy", policy =>
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        policy.WithOrigins(allowedOrigins)
+  .AllowAnyHeader()
+  .AllowAnyMethod()
+  .AllowCredentials();
+    });
+});
 
-            // ثبت تنظیمات
-            builder.Services.Configure<DatabaseConfig>(builder.Configuration.GetSection("Database"));
-            builder.Services.Configure<SecurityConfig>(builder.Configuration.GetSection("Security"));
-            builder.Services.Configure<MessagingConfig>(builder.Configuration.GetSection("Messaging"));
+// ثبت سرویس‌های زیرساخت
+builder.Services.AddPersistenceServices();
 
-            // خواندن دامین‌های مجاز از appsettings.json
-            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new string[0];
+// ثبت سرویس‌های امنیتی
+builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
+builder.Services.AddScoped<RoleBasedAccessControl>();
 
-            // تعریف CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("DynamicCorsPolicy", policy =>
-                {
-                    policy.WithOrigins(allowedOrigins)
-                          .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
-                });
-            });
+// ثبت JwtTokenGenerator
+builder.Services.AddScoped<JwtTokenGenerator>(sp =>
+{
+    var config = sp.GetRequiredService<IOptions<SecurityConfig>>().Value;
+    return new JwtTokenGenerator(
+        config.JwtSecretKey,
+        config.JwtIssuer,
+        config.JwtAudience,
+        config.JwtExpiryMinutes
+    );
+});
 
-            // ثبت سرویس‌های زیرساخت
-            builder.Services.AddPersistenceServices();
+// ثبت سرویس‌های پیام‌رسانی
+builder.Services.AddScoped<ISmsSender>(sp =>
+{
+    var config = sp.GetRequiredService<IOptions<MessagingConfig>>().Value;
+    return new SmsSender(config.SmsApiKey, config.SenderNumber);
+});
 
-            // ثبت سرویس‌های امنیتی
-            builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
-            builder.Services.AddScoped<RoleBasedAccessControl>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<INotificationManager, NotificationManager>();
 
-            // ثبت JwtTokenGenerator
-            builder.Services.AddScoped<JwtTokenGenerator>(sp =>
-            {
-                var config = sp.GetRequiredService<IOptions<SecurityConfig>>().Value;
-                return new JwtTokenGenerator(
-                    config.JwtSecretKey,
-                    config.JwtIssuer,
-                    config.JwtAudience,
-                    config.JwtExpiryMinutes
-                );
-            });
-
-            // ثبت سرویس‌های پیام‌رسانی
-            builder.Services.AddScoped<ISmsSender>(sp =>
-            {
-                var config = sp.GetRequiredService<IOptions<MessagingConfig>>().Value;
-                return new SmsSender(config.SmsApiKey, config.SenderNumber);
-            });
-
-            builder.Services.AddScoped<IEmailSender, EmailSender>();
-            builder.Services.AddScoped<INotificationManager, NotificationManager>();
-
-            // ثبت سرویس‌های اصلی
-            builder.Services.AddScoped<ILoanApplicationService, LoanProcessingService>();
-            builder.Services.AddScoped<ICreditScoreCalculator, CreditScoreCalculator>();
-            builder.Services.AddScoped<IPaymentProcessor, PaymentService>();
-            builder.Services.AddScoped<INotificationService, NotificationService>();
-            builder.Services.AddScoped<IInstallmentManagementService, InstallmentManagementService>();
-            builder.Services.AddScoped<IUserService, UserService>();
+// ثبت سرویس‌های اصلی
+builder.Services.AddScoped<ILoanApplicationService, LoanProcessingService>();
+builder.Services.AddScoped<ICreditScoreCalculator, CreditScoreCalculator>();
+builder.Services.AddScoped<IPaymentProcessor, PaymentProcessor>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IInstallmentManagementService, InstallmentManagementService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<PaymentStrategyFactory>();
+builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
+builder.Services.AddScoped<IPaymentVerifier, PaymentVerifier>();
+builder.Services.AddScoped<ITransactionLogger, TransactionLogger>();
+builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddScoped<ITransactionLogService, TransactionLogService>();
+builder.Services.AddScoped<IRecipientService, RecipientService>();
 
 
-            builder.Services.AddControllers();
 
-            // Swagger
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Services.AddSwaggerGen();
-            }
 
-            var app = builder.Build();
 
-            // Middleware
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+builder.Services.AddControllers();
 
-            app.UseHttpsRedirection();
+// Swagger
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSwaggerGen();
+}
 
-            // فعال کردن CORS قبل از Authorization
-            app.UseCors("DynamicCorsPolicy");
+var app = builder.Build();
 
-            app.UseAuthorization();
+// Middleware
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-            // میان‌افزارها
-            app.UseMiddleware<LoggingMiddleware>();
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseHttpsRedirection();
 
-            app.MapControllers();
+// فعال کردن CORS قبل از Authorization
+app.UseCors("DynamicCorsPolicy");
 
-            // مایگریشن‌ها
-            using (var scope = app.Services.CreateScope())
-            {
-                try
-                {
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    context.Database.Migrate();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"خطای اعمال مایگریشن: {ex.Message}");
-                }
-            }
+app.UseAuthorization();
 
-            app.Run();
-        }
+// میان‌افزارها
+app.UseMiddleware<LoggingMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.MapControllers();
+
+// مایگریشن‌ها
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"خطای اعمال مایگریشن: {ex.Message}");
     }
 }
+
+app.Run();

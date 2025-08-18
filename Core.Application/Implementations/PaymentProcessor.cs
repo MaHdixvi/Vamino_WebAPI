@@ -1,78 +1,105 @@
 ﻿using Core.Application.DTOs;
-using Core.Application.Services;
-using Domain.Entities;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Core.Applicationn.Services;
 
-namespace Core.Application.Contracts
+namespace Core.Application.Services
 {
-    /// <summary>
-    /// سرویس پردازش پرداخت و انتقال وجه به کاربر
-    /// </summary>
-    public class PaymentService : IPaymentProcessor
+    public class PaymentProcessor : IPaymentProcessor
     {
-        private readonly ITransactionLogRepository _transactionLogRepository;
-        private readonly ILoanRepository _loanRepository;
+        private readonly IPaymentValidator _validator;
+        private readonly ITransactionLogger _transactionLogger;
+        private readonly PaymentStrategyFactory _strategyFactory;
 
-        public PaymentService(ITransactionLogRepository transactionLogRepository, ILoanRepository loanRepository)
+        public PaymentProcessor(
+            IPaymentValidator validator,
+            ITransactionLogger transactionLogger,
+            PaymentStrategyFactory strategyFactory)
         {
-            _transactionLogRepository = transactionLogRepository;
-            _loanRepository = loanRepository;
+            _validator = validator;
+            _transactionLogger = transactionLogger;
+            _strategyFactory = strategyFactory;
         }
 
-        public async Task<bool> ProcessPaymentAsync(PaymentRequestDto paymentRequest)
+        public async Task<PaymentResult> ProcessPaymentAsync(PaymentRequestDto paymentRequest)
         {
-            // شبیه‌سازی اتصال به درگاه پرداخت بانکی
-            var success = await SimulateBankPaymentAsync(paymentRequest);
+            var validation = _validator.ValidateAsync(paymentRequest);
+            if (!validation.Result.IsValid)
+                return PaymentResult.Failed(validation.Result.ErrorMessage);
 
-            var log = new TransactionLog
+            var trackingCode = GenerateTrackingCode();
+            var strategy = _strategyFactory.GetStrategy(paymentRequest.Method.ToString());
+            var result = await strategy.ProcessAsync(paymentRequest, trackingCode);
+
+            await _transactionLogger.LogPaymentResultAsync(paymentRequest, result);
+
+            return result;
+        }
+
+        public async Task<PaymentStatusResult> VerifyPaymentAsync(string trackingCode)
+        {
+            await Task.Delay(50);
+            return new PaymentStatusResult
             {
-                Action = success ? "Pay" : "PayFailed",
-                RelatedEntity = "Loan",
-                Details = $"Payment for Loan {paymentRequest.LoanId}: {(success ? "Success" : "Failed")}",
-                Timestamp = DateTime.UtcNow
+                TrackingCode = trackingCode,
+                Status = "Completed",
+                IsVerified = true,
+                VerificationDate = DateTime.UtcNow
             };
-            await _transactionLogRepository.AddAsync(log);
+        }
 
-            if (success)
+        public async Task<bool> CancelPaymentAsync(string trackingCode, string userId)
+        {
+            await Task.Delay(50);
+            return true;
+        }
+
+        public string GenerateTrackingCode()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
+
+        public BankAccountValidationResult ValidateBankAccount(string bankAccountNumber)
+        {
+            bool isValid = !string.IsNullOrEmpty(bankAccountNumber) && bankAccountNumber.Length >= 10;
+            return new BankAccountValidationResult
             {
-                var loan = await _loanRepository.GetByIdAsync(paymentRequest.LoanId);
-                if (loan != null)
-                {
-                    loan.Status = "Paid";
-                    await _loanRepository.UpdateAsync(loan);
-                }
-            }
-
-            return success;
+                IsValid = isValid,
+                BankName = "Sample Bank",
+                CardType = "Debit",
+                ValidationMessage = isValid ? "حساب معتبر است" : "شماره حساب نامعتبر است"
+            };
         }
 
-        private async Task<bool> SimulateBankPaymentAsync(PaymentRequestDto paymentRequest)
+        public PaymentAmountBreakdown CalculatePaymentAmount(decimal amount, string currency = "IRR")
         {
-            // شبیه‌سازی تراکنش بانکی
-            await Task.Delay(1000); // تأخیر شبیه‌سازی
-            return true; // فرض موفقیت تراکنش
+            decimal tax = amount * 0.09m;
+            decimal commission = amount * 0.02m;
+            decimal total = amount + tax + commission;
+
+            return new PaymentAmountBreakdown
+            {
+                OriginalAmount = amount,
+                Tax = tax,
+                Commission = commission,
+                TotalAmount = total
+            };
         }
 
-        public Task<string> GeneratePaymentTrackingCode()
+        public async Task<PaymentGatewayResponse> GetPaymentGatewayUrlAsync(PaymentGatewayRequest request)
         {
-            return Task.FromResult($"TRK-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString().Substring(0, 8)}");
+            await Task.Delay(50);
+            return new PaymentGatewayResponse
+            {
+                Success = true,
+                GatewayUrl = $"https://gateway.example.com/pay/{GenerateTrackingCode()}",
+                PaymentToken = Guid.NewGuid().ToString("N")
+            };
         }
 
-        public Task<bool> ValidateBankAccountAsync(string bankAccountNumber)
+        public async Task<PaymentResult> ProcessGatewayCallbackAsync(PaymentCallbackDto callbackData)
         {
-            // اعتبارسنجی شماره حساب (الگوی ساده)
-            return Task.FromResult(bankAccountNumber?.Length == 26 && bankAccountNumber.StartsWith("IR"));
-        }
-
-        public Task<decimal> CalculateTotalAmountWithCommission(decimal amount)
-        {
-            var commission = CommissionCalculator.CalculateCommission(amount);
-            return Task.FromResult(amount + commission);
+            await Task.Delay(50);
+            return PaymentResult.Success(callbackData.TrackingCode, callbackData.TransactionId);
         }
     }
 }

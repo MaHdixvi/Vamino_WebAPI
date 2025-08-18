@@ -1,8 +1,6 @@
 ﻿using Domain.Entities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Core.Application.Contracts
@@ -12,12 +10,18 @@ namespace Core.Application.Contracts
     /// </summary>
     public interface ITransactionLogRepository
     {
-        Task<TransactionLog> GetByIdAsync(string id);
+        IQueryable<TransactionLog> GetByActionQueryable(string action);
+        IQueryable<TransactionLog> GetAllQueryable();
+        IQueryable<TransactionLog> GetByUserIdQueryable(string userId);
+        IQueryable<TransactionLog> GetByEntityQueryable(string entityType, string entityId);
+
+        Task<TransactionLog> GetByTrackingCodeAsync(string trackingCode);
+        Task UpdateAsync(TransactionLog log);
+        Task AddAsync(TransactionLog log);
+        Task<IEnumerable<TransactionLog>> GetByEntityAsync(string entityType, string entityId);
         Task<IEnumerable<TransactionLog>> GetByUserIdAsync(string userId);
         Task<IEnumerable<TransactionLog>> GetByActionAsync(string action);
-        Task<IEnumerable<TransactionLog>> GetByRelatedEntityAsync(string relatedEntity);
-        Task AddAsync(TransactionLog log);
-        Task UpdateAsync(TransactionLog log);
-        Task DeleteAsync(string id);
+        Task<TransactionLog> GetByIdAsync(string logId);
+        Task<IEnumerable<TransactionLog>> GetAllAsync();
     }
 }
