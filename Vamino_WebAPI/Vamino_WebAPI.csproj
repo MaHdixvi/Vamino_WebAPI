@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Core.Application\Core.Application.csproj" />
     <ProjectReference Include="..\Infrastructure.Messaging\Infrastructure.Messaging.csproj" />
     <ProjectReference Include="..\Infrastructure.Persistence\Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Infrastructure.Pos\Infrastructure.Pos.csproj" />
     <ProjectReference Include="..\Infrastructure.Security\Infrastructure.Security.csproj" />
   </ItemGroup>
 

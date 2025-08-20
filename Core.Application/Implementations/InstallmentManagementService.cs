@@ -1,4 +1,5 @@
 ﻿using Core.Application.Contracts;
+using Core.Application.DTOs;
 using Core.Application.Exceptions;
 using Core.Application.Helpers;
 using Domain.Entities;
@@ -98,5 +99,53 @@ namespace Core.Application.Services
             var allInstallments = await _installmentRepository.GetAllAsync();
             return allInstallments.Where(i => i.Status == "Overdue" && i.DueDate < DateTime.UtcNow);
         }
+
+        public async Task<InstallmentPaymentResult> PayInstallmentAsync(string loanId, int installmentNumber, decimal amount, string paymentMethod)
+        {
+            // گرفتن قسط مورد نظر
+            var installment = (await _installmentRepository.GetByLoanIdAsync(loanId))
+                                .FirstOrDefault(i => i.Number == installmentNumber);
+
+            if (installment == null)
+            {
+                return new InstallmentPaymentResult
+                {
+                    Success = false,
+                    Message = $"قسط شماره {installmentNumber} برای وام {loanId} پیدا نشد."
+                };
+            }
+
+            if (installment.Status == "Paid")
+            {
+                return new InstallmentPaymentResult
+                {
+                    Success = false,
+                    Message = "این قسط قبلاً پرداخت شده است."
+                };
+            }
+
+            if (amount < installment.TotalAmount)
+            {
+                return new InstallmentPaymentResult
+                {
+                    Success = false,
+                    Message = $"مبلغ پرداختی کمتر از مبلغ قسط ({installment.TotalAmount}) است."
+                };
+            }
+
+            // بروزرسانی وضعیت قسط
+            installment.Status = "Paid";
+            installment.PaymentDate = DateTime.UtcNow;
+            await _installmentRepository.UpdateAsync(installment);
+
+            // برگرداندن نتیجه پرداخت
+            return new InstallmentPaymentResult
+            {
+                Success = true,
+                Message = $"قسط شماره {installmentNumber} با موفقیت پرداخت شد.",
+                TrackingCode = Guid.NewGuid().ToString() // می‌توان از POS یا تراکنش واقعی هم استفاده کرد
+            };
+        }
+
     }
 }

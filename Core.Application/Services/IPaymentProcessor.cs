@@ -48,5 +48,10 @@ namespace Core.Application.Services
         /// پردازش بازگشت از درگاه پرداخت
         /// </summary>
         Task<PaymentResult> ProcessGatewayCallbackAsync(PaymentCallbackDto callbackData);
+        Task<PaymentResult> PayWithPosAsync(PaymentRequestDto request, string trackingCode);
+        Task<bool> CancelPosAsync(string rrnOrStan, string trackingCode);
+        Task<PaymentResult> ProcessPosPaymentAsync(PaymentRequestDto request);
+
+
     }
 }

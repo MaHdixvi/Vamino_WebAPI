@@ -116,5 +116,30 @@ namespace Vamino_WebAPI.Controllers
                 return StatusCode(500, "خطای سرور در لغو پرداخت");
             }
         }
+        [HttpPost("pos/initiate")]
+        public async Task<IActionResult> InitiatePosPayment([FromBody] PaymentRequestDto request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var userId = User.FindFirst("sub")?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized();
+
+                request.UserId = userId;
+
+                var result = await _paymentProcessor.ProcessPosPaymentAsync(request);
+
+                return result.IsSuccess ? Ok(result) : BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطا در InitiatePosPayment");
+                return StatusCode(500, "خطای سرور در پرداخت با کارت‌خوان");
+            }
+        }
+
     }
 }

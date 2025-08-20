@@ -6,6 +6,21 @@ using System.Threading.Tasks;
 
 namespace Core.Application.DTOs
 {
+    public class InstallmentPaymentResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string TrackingCode { get; set; }
+    }
+
+    public class InstallmentPaymentRequest
+    {
+        public string? LoanId { get; set; }
+        public int InstallmentNumber { get; set; }
+        public decimal Amount { get; set; }
+        public string PaymentMethod { get; set; } // مثلا "POS" یا "BankTransfer"
+    }
+
     /// <summary>
     /// DTO برای جدول اقساط وام
     /// </summary>
@@ -23,6 +38,7 @@ namespace Core.Application.DTOs
     /// </summary>
     public class InstallmentDto
     {
+        public string Id { get; set; }
         public int Number { get; set; }
         public DateTime DueDate { get; set; }
         public decimal PrincipalAmount { get; set; }

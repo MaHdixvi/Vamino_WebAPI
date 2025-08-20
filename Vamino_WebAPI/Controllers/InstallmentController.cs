@@ -12,10 +12,12 @@ namespace Vamino_WebAPI.Controllers
     public class InstallmentController : SiteBaseController
     {
         private readonly IInstallmentManagementService _installmentService;
+        private readonly ILoanApplicationService _loanApplicationService;
 
-        public InstallmentController(IInstallmentManagementService installmentService)
+        public InstallmentController(IInstallmentManagementService installmentService,ILoanApplicationService loanApplicationService)
         {
             _installmentService = installmentService;
+            _loanApplicationService = loanApplicationService;
         }
 
         /// <summary>
@@ -64,6 +66,7 @@ namespace Vamino_WebAPI.Controllers
                 var installments = await _installmentService.GetInstallmentsByLoanIdAsync(loanId);
                 var dtos = installments.Select(i => new InstallmentDto
                 {
+                    Id=i.Id,
                     Number = i.Number,
                     DueDate = i.DueDate,
                     PrincipalAmount = i.PrincipalAmount,
@@ -79,5 +82,67 @@ namespace Vamino_WebAPI.Controllers
                 return BadRequest(Result<IEnumerable<InstallmentDto>>.Failure(new[] { ex.Message }));
             }
         }
+        [HttpPost("pay")]
+        public async Task<ActionResult<Result<InstallmentPaymentResult>>> PayInstallment([FromBody] InstallmentPaymentRequest request)
+        {
+            try
+            {
+                // فرض بر این که سرویس پرداخت را دارد
+                var result = await _installmentService.PayInstallmentAsync(
+                    request.LoanId, request.InstallmentNumber, request.Amount, request.PaymentMethod);
+
+                var paymentResult = new InstallmentPaymentResult
+                {
+                    Success = result.Success,
+                    Message = result.Message,
+                    TrackingCode = result.TrackingCode
+                };
+
+                return Ok(Result<InstallmentPaymentResult>.Success(paymentResult));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result<InstallmentPaymentResult>.Failure(new[] { ex.Message }));
+            }
+        }
+        /// <summary>
+        /// پرداخت کل اقساط یک وام
+        /// </summary>
+        [HttpPost("pay-all/{loanId}")]
+        public async Task<ActionResult<Result<InstallmentPaymentResult>>> PayAllInstallments(string loanId, [FromBody] InstallmentPaymentRequest request)
+        {
+            try
+            {
+                // دریافت تمام اقساط وام
+                var installments = await _installmentService.GetInstallmentsByLoanIdAsync(loanId);
+                var unpaidInstallments = installments.Where(i => i.Status.ToLower() != "paid").ToList();
+
+                if (!unpaidInstallments.Any())
+                    return BadRequest(Result<InstallmentPaymentResult>.Failure(new[] { "تمام اقساط قبلاً پرداخت شده‌اند." }));
+
+                // پرداخت هر قسط به ترتیب
+                foreach (var installment in unpaidInstallments)
+                {
+                    await _installmentService.PayInstallmentAsync(
+                        loanId,
+                        installment.Number,
+                        installment.TotalAmount, // پرداخت کل مبلغ قسط
+                        request.PaymentMethod
+                    );
+                }
+                await _loanApplicationService.UpdateLoanApplicationStatusAsync(loanId,"Paid");
+                return Ok(Result<InstallmentPaymentResult>.Success(new InstallmentPaymentResult
+                {
+                    Success = true,
+                    Message = $"تمام {unpaidInstallments.Count} قسط با موفقیت پرداخت شد.",
+                    TrackingCode = Guid.NewGuid().ToString() // می‌توانید منطق اختصاصی خود برای TrackingCode داشته باشید
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Result<InstallmentPaymentResult>.Failure(new[] { ex.Message }));
+            }
+        }
+
     }
 }

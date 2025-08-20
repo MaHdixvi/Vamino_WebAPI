@@ -8,6 +8,7 @@ using Infrastructure.Messaging.Configuration;
 using Infrastructure.Persistence.Configuration;
 using Infrastructure.Persistence.Data;
 using Infrastructure.Persistence.Extensions;
+using Infrastructure.Pos;
 using Infrastructure.Security;
 using Infrastructure.Security.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,10 @@ builder.Services.AddCors(options =>
 
 // ثبت سرویس‌های زیرساخت
 builder.Services.AddPersistenceServices();
+builder.Services.Configure<PosConfig>(builder.Configuration.GetSection("Pos"));
+builder.Services.AddScoped<IPosTerminal, MockPosTerminal>();
+builder.Services.AddScoped<IPosTerminal, PaxPosTerminal>();
+
 
 // ثبت سرویس‌های امنیتی
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
@@ -79,6 +84,7 @@ builder.Services.AddScoped<ITransactionLogger, TransactionLogger>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<ITransactionLogService, TransactionLogService>();
 builder.Services.AddScoped<IRecipientService, RecipientService>();
+
 
 
 

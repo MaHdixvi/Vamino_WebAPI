@@ -1,4 +1,7 @@
-﻿using Core.Application.DTOs;
+﻿using Core.Application.Contracts;
+using Core.Application.DTOs;
+using Domain.Entities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -6,6 +9,9 @@ namespace Core.Application.Services
 {
     public class PaymentProcessor : IPaymentProcessor
     {
+        private readonly IPosTerminal _pos;
+        private readonly ITransactionLogRepository _txLogRepo;
+        private readonly ILogger<PaymentProcessor> _logger;
         private readonly IPaymentValidator _validator;
         private readonly ITransactionLogger _transactionLogger;
         private readonly PaymentStrategyFactory _strategyFactory;
@@ -13,12 +19,19 @@ namespace Core.Application.Services
         public PaymentProcessor(
             IPaymentValidator validator,
             ITransactionLogger transactionLogger,
-            PaymentStrategyFactory strategyFactory)
+            PaymentStrategyFactory strategyFactory,
+            IPosTerminal pos,
+            ITransactionLogRepository txLogRepo,
+            ILogger<PaymentProcessor> logger)
         {
             _validator = validator;
             _transactionLogger = transactionLogger;
             _strategyFactory = strategyFactory;
+            _pos = pos;
+            _txLogRepo = txLogRepo;
+            _logger = logger;
         }
+
 
         public async Task<PaymentResult> ProcessPaymentAsync(PaymentRequestDto paymentRequest)
         {
@@ -100,6 +113,90 @@ namespace Core.Application.Services
         {
             await Task.Delay(50);
             return PaymentResult.Success(callbackData.TrackingCode, callbackData.TransactionId);
+        }
+        public async Task<PaymentResult> ProcessPosPaymentAsync(PaymentRequestDto request)
+        {
+            if (!await _pos.IsConnectedAsync())
+                await _pos.ConnectAsync();
+
+            var saleResult = await _pos.SaleAsync(new PosSaleRequest(
+                request.Amount,
+                "IRR",
+                request.TrackingCode
+            ));
+
+            return new PaymentResult
+            {
+                IsSuccess = saleResult.Success,
+                TrackingCode = request.TrackingCode,
+                TransactionId = saleResult.RRN,
+                Message = saleResult.Message,
+            };
+        }
+        public async Task<PaymentResult> PayWithPosAsync(PaymentRequestDto request, string trackingCode)
+        {
+            try
+            {
+                // لاگ شروع
+                await _txLogRepo.AddAsync(new TransactionLog
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Timestamp = DateTime.UtcNow,
+                    Action = "POS_SALE_REQUEST",
+                    RelatedEntity = "Loan/Installment",
+                    EntityId = request.DeviceId,
+                    UserId = request.UserId,
+                    Amount = request.Amount,
+                    TrackingCode = trackingCode,
+                    PaymentMethod = "POS",
+                    IPAddress = request.UserIP ?? ""
+                });
+
+                var result = await _pos.SaleAsync(new PosSaleRequest(request.Amount, request.Currency ?? "IRR", trackingCode));
+
+                // لاگ نتیجه
+                await _txLogRepo.AddAsync(new TransactionLog
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Timestamp = DateTime.UtcNow,
+                    Action = "POS_SALE_RESULT",
+                    RelatedEntity = "Loan/Installment",
+                    EntityId = request.DeviceId,
+                    UserId = request.UserId,
+                    Amount = request.Amount,
+                    TrackingCode = trackingCode,
+                    PaymentMethod = "POS",
+                    Details = result.Message + $" | RRN={result.RRN} | STAN={result.Stan}"
+                });
+                return new PaymentResult
+                {
+                    IsSuccess = result.Success,
+                    TransactionId = result.RRN ?? result.Stan ?? trackingCode,
+                    Message = result.Message
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "POS payment failed");
+                return new PaymentResult { IsSuccess = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<bool> CancelPosAsync(string rrnOrStan, string trackingCode)
+        {
+            var res = await _pos.CancelAsync(rrnOrStan, trackingCode);
+            await _txLogRepo.AddAsync(new TransactionLog
+            {
+                Id = Guid.NewGuid().ToString(),
+                Timestamp = DateTime.UtcNow,
+                Action = "POS_VOID_RESULT",
+                RelatedEntity = "POS",
+                EntityId = rrnOrStan,
+                TrackingCode = trackingCode,
+                PaymentMethod = "POS",
+                Details = res.Message
+            });
+            return res.Success;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Core.Application.DTOs;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +14,11 @@ namespace Core.Application.Services
         Task<IEnumerable<Installment>> GetInstallmentsByLoanIdAsync(string loanId);
         Task UpdateInstallmentStatusAsync(string installmentId, string status);
         Task<IEnumerable<Installment>> GetOverdueInstallmentsAsync();
+        // متد پرداخت قسط
+        Task<InstallmentPaymentResult> PayInstallmentAsync(
+            string loanId,
+            int installmentNumber,
+            decimal amount,
+            string paymentMethod);
     }
 }
